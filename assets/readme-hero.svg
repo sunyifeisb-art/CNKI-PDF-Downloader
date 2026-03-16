@@ -58,13 +58,13 @@
     <rect x="1242" y="614" width="118" height="34" rx="17" fill="#FFF5D8" stroke="#F0D486"/>
     <text x="1271" y="636" fill="#8A6111" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">PKU 北大核心</text>
 
-    <rect x="214" y="694" width="124" height="34" rx="17" fill="#EAF3FF" stroke="#B8D3F8"/>
-    <text x="247" y="716" fill="#245EA8" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">CSSCI 南大核心</text>
-    <rect x="352" y="694" width="104" height="34" rx="17" fill="#E9F9FD" stroke="#B8E2EB"/>
-    <text x="383" y="716" fill="#1F6D83" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">AMI AMI</text>
-    <rect x="470" y="694" width="118" height="34" rx="17" fill="#EEF3FA"/>
-    <text x="505" y="716" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">人工智能立法</text>
-    <rect x="602" y="694" width="138" height="34" rx="17" fill="#EEF3FA"/>
-    <text x="638" y="716" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">人工智能训练数据</text>
+    <rect x="214" y="670" width="124" height="34" rx="17" fill="#EAF3FF" stroke="#B8D3F8"/>
+    <text x="247" y="692" fill="#245EA8" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">CSSCI 南大核心</text>
+    <rect x="352" y="670" width="104" height="34" rx="17" fill="#E9F9FD" stroke="#B8E2EB"/>
+    <text x="383" y="692" fill="#1F6D83" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">AMI AMI</text>
+    <rect x="470" y="670" width="118" height="34" rx="17" fill="#EEF3FA"/>
+    <text x="505" y="692" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">人工智能立法</text>
+    <rect x="602" y="670" width="138" height="34" rx="17" fill="#EEF3FA"/>
+    <text x="638" y="692" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">人工智能训练数据</text>
   </g>
 </svg>
