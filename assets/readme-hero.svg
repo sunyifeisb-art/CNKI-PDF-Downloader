@@ -1,89 +1,70 @@
-<svg width="1600" height="980" viewBox="0 0 1600 980" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="page" x1="62" y1="28" x2="1522" y2="958" gradientUnits="userSpaceOnUse">
+    <linearGradient id="bg" x1="88" y1="52" x2="1492" y2="852" gradientUnits="userSpaceOnUse">
       <stop stop-color="#F7FBFF"/>
-      <stop offset="1" stop-color="#D7E7FA"/>
+      <stop offset="1" stop-color="#D8E8FB"/>
     </linearGradient>
-    <linearGradient id="glass" x1="120" y1="94" x2="1470" y2="888" gradientUnits="userSpaceOnUse">
-      <stop stop-color="rgba(255,255,255,0.82)"/>
-      <stop offset="1" stop-color="rgba(242,248,255,0.62)"/>
+    <linearGradient id="panel" x1="146" y1="118" x2="1424" y2="744" gradientUnits="userSpaceOnUse">
+      <stop stop-color="rgba(255,255,255,0.9)"/>
+      <stop offset="1" stop-color="rgba(243,248,255,0.76)"/>
     </linearGradient>
     <linearGradient id="primary" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#4C8FE7"/>
-      <stop offset="1" stop-color="#245DAD"/>
+      <stop stop-color="#4F92EA"/>
+      <stop offset="1" stop-color="#255FAF"/>
     </linearGradient>
-    <filter id="shadow" x="18" y="20" width="1564" height="940" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="shadow" x="92" y="92" width="1416" height="684" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feFlood flood-opacity="0" result="BackgroundImageFix"/>
       <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-      <feOffset dy="18"/>
-      <feGaussianBlur stdDeviation="24"/>
-      <feColorMatrix type="matrix" values="0 0 0 0 0.121569 0 0 0 0 0.301961 0 0 0 0 0.592157 0 0 0 0.16 0"/>
+      <feOffset dy="20"/>
+      <feGaussianBlur stdDeviation="22"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.14902 0 0 0 0 0.360784 0 0 0 0 0.639216 0 0 0 0.16 0"/>
       <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
       <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
     </filter>
   </defs>
-  <rect width="1600" height="980" rx="40" fill="url(#page)"/>
-  <circle cx="1390" cy="136" r="126" fill="#E5F1FF"/>
-  <circle cx="176" cy="886" r="110" fill="#DCEBFF"/>
+
+  <rect width="1600" height="900" rx="40" fill="url(#bg)"/>
+  <circle cx="1382" cy="126" r="120" fill="#E7F2FF"/>
+  <circle cx="144" cy="814" r="104" fill="#DCEBFF"/>
+
   <g filter="url(#shadow)">
-    <rect x="40" y="32" width="1520" height="860" rx="24" fill="url(#glass)" stroke="#C7DCF6"/>
-    <rect x="40" y="32" width="1520" height="48" rx="24" fill="#2D3347"/>
-    <text x="62" y="63" fill="#F2F7FF" font-size="24" font-family="'Helvetica Neue', 'PingFang SC', sans-serif" font-weight="700">CNKI论文PDF批量下载助手</text>
-    <path d="M1524 48L1540 64" stroke="#0A0F16" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M1540 48L1524 64" stroke="#0A0F16" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="136" y="116" width="1328" height="596" rx="34" fill="url(#panel)" stroke="#C8DCF6"/>
+    <rect x="170" y="148" width="1280" height="44" rx="22" fill="#EFF5FD"/>
+    <circle cx="1360" cy="170" r="54" fill="url(#primary)"/>
+    <circle cx="1360" cy="170" r="38" stroke="#A9CBF5" stroke-width="2" stroke-dasharray="6 6"/>
+    <text x="1343" y="162" fill="#F5FAFF" font-size="34" font-family="'Helvetica Neue', sans-serif" font-weight="700">70</text>
+    <text x="1328" y="186" fill="#DDEBFF" font-size="12" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">当前条目</text>
 
-    <rect x="70" y="114" width="1460" height="334" rx="34" fill="rgba(248,252,255,0.64)" stroke="#D4E4F7"/>
-    <rect x="88" y="132" width="1424" height="48" rx="24" fill="#F7FBFF" stroke="#D7E5F8"/>
-    <circle cx="115" cy="156" r="7" stroke="#6484AB" stroke-width="2.2"/>
-    <path d="M120 161L127 168" stroke="#6484AB" stroke-width="2.2" stroke-linecap="round"/>
-    <text x="148" y="163" fill="#5A7496" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">搜索标题、作者、期刊、关键词</text>
+    <text x="214" y="290" fill="#223754" font-size="72" font-family="Georgia, 'Songti SC', serif" font-weight="700">CNKI论文PDF批量下载助手</text>
+    <text x="214" y="352" fill="#49627F" font-size="28" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">
+      把知网检索结果整理成可批量处理的 PDF 下载队列
+    </text>
+    <text x="214" y="394" fill="#49627F" font-size="28" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">
+      支持抓取本页、期刊等级补全、批量下载与 WebVPN 场景
+    </text>
 
-    <rect x="88" y="204" width="56" height="36" rx="18" fill="#E7F1FF" stroke="#AFCBF2"/>
-    <text x="104" y="228" fill="#2E6AB6" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">全部</text>
-    <rect x="156" y="204" width="72" height="36" rx="18" fill="#F7FBFF" stroke="#D6E4F7"/>
-    <text x="171" y="228" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">可下载</text>
-    <rect x="240" y="204" width="72" height="36" rx="18" fill="#F7FBFF" stroke="#D6E4F7"/>
-    <text x="258" y="228" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">待抓链</text>
-    <rect x="324" y="204" width="86" height="36" rx="18" fill="#F7FBFF" stroke="#D6E4F7"/>
-    <text x="343" y="228" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">下载失败</text>
+    <rect x="214" y="448" width="204" height="64" rx="32" fill="url(#primary)"/>
+    <text x="273" y="490" fill="#F7FBFF" font-size="30" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">抓取本页</text>
+    <rect x="438" y="448" width="204" height="64" rx="32" fill="#F7FBFF" stroke="#C7DCF6"/>
+    <text x="495" y="490" fill="#35557D" font-size="30" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">批量下载</text>
 
-    <rect x="88" y="252" width="56" height="36" rx="18" fill="#E7F1FF" stroke="#AFCBF2"/>
-    <text x="104" y="276" fill="#2E6AB6" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">默认</text>
-    <rect x="156" y="252" width="56" height="36" rx="18" fill="#F7FBFF" stroke="#D6E4F7"/>
-    <text x="172" y="276" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">时间</text>
-    <rect x="224" y="252" width="56" height="36" rx="18" fill="#F7FBFF" stroke="#D6E4F7"/>
-    <text x="240" y="276" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">被引</text>
-    <rect x="292" y="252" width="56" height="36" rx="18" fill="#F7FBFF" stroke="#D6E4F7"/>
-    <text x="308" y="276" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">下载</text>
+    <rect x="214" y="560" width="980" height="108" rx="24" fill="#FBFDFF" stroke="#D5E4F7"/>
+    <rect x="242" y="588" width="16" height="16" rx="4" fill="#5C95DE"/>
+    <text x="286" y="602" fill="#223754" font-size="34" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">示例论文：生成式人工智能法治的制度逻辑与实现路径</text>
+    <text x="286" y="644" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">作者、来源、日期、被引、下载、关键词与摘要一屏查看</text>
 
-    <rect x="92" y="312" width="18" height="18" rx="4" fill="#4E91E8"/>
-    <path d="M97 321L101 325L107 316" stroke="#F7FBFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="126" y="326" fill="#45607F" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="600">选择当前筛选结果</text>
-    <text x="1360" y="326" fill="#45607F" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="600">仅选可下载</text>
+    <rect x="1222" y="560" width="172" height="108" rx="24" fill="#F8FBFF" stroke="#D5E4F7"/>
+    <text x="1252" y="598" fill="#48617E" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">期刊等级</text>
+    <rect x="1242" y="614" width="118" height="34" rx="17" fill="#FFF5D8" stroke="#F0D486"/>
+    <text x="1271" y="636" fill="#8A6111" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">PKU 北大核心</text>
 
-    <rect x="70" y="478" width="1460" height="332" rx="34" fill="rgba(248,252,255,0.64)" stroke="#D4E4F7"/>
-    <text x="88" y="524" fill="#3B5675" font-size="20" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">70 条结果</text>
-    <text x="1404" y="524" fill="#45607F" font-size="20" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">已选 70</text>
-    <rect x="88" y="548" width="1424" height="120" rx="28" fill="#FAFDFF" stroke="#D4E3F7"/>
-    <rect x="112" y="574" width="18" height="18" rx="4" fill="#5D95DE"/>
-    <path d="M117 583L121 587L127 578" stroke="#F7FBFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="154" y="592" fill="#233854" font-size="22" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">筑基与拓新:中国人工智能法治研究2025年度观察</text>
-    <text x="154" y="628" fill="#4C6582" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">作者、来源、日期、被引、下载、摘要、关键词一屏查看</text>
-    <text x="154" y="664" fill="#45607F" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">被引 0   下载 1545</text>
-    <rect x="330" y="644" width="112" height="34" rx="17" fill="#FFF5D8" stroke="#F0D486"/>
-    <text x="354" y="666" fill="#8A6111" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">PKU 北大核心</text>
-    <rect x="454" y="644" width="132" height="34" rx="17" fill="#EAF3FF" stroke="#B8D3F8"/>
-    <text x="483" y="666" fill="#245EA8" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">CSSCI 南大核心</text>
-    <rect x="598" y="644" width="108" height="34" rx="17" fill="#E9F9FD" stroke="#B8E2EB"/>
-    <text x="628" y="666" fill="#1F6D83" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">AMI AMI</text>
-    <rect x="154" y="694" width="112" height="30" rx="15" fill="#EEF3FA"/><text x="178" y="714" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">人工智能立法</text>
-    <rect x="278" y="694" width="132" height="30" rx="15" fill="#EEF3FA"/><text x="302" y="714" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">人工智能训练数据</text>
-    <rect x="422" y="694" width="108" height="30" rx="15" fill="#EEF3FA"/><text x="450" y="714" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">决策式人工智能</text>
-    <rect x="154" y="738" width="108" height="44" rx="22" fill="#F7FBFF" stroke="#D4E3F7"/>
-    <text x="180" y="766" fill="#46607F" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">下载 PDF</text>
-
-    <rect x="70" y="842" width="1460" height="82" rx="22" fill="rgba(248,252,255,0.64)" stroke="#D4E4F7"/>
-    <text x="88" y="890" fill="#6A809D" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">错误日志</text>
-    <text x="1410" y="890" fill="#AEC6E5" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">0</text>
+    <rect x="214" y="694" width="124" height="34" rx="17" fill="#EAF3FF" stroke="#B8D3F8"/>
+    <text x="247" y="716" fill="#245EA8" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">CSSCI 南大核心</text>
+    <rect x="352" y="694" width="104" height="34" rx="17" fill="#E9F9FD" stroke="#B8E2EB"/>
+    <text x="383" y="716" fill="#1F6D83" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">AMI AMI</text>
+    <rect x="470" y="694" width="118" height="34" rx="17" fill="#EEF3FA"/>
+    <text x="505" y="716" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">人工智能立法</text>
+    <rect x="602" y="694" width="138" height="34" rx="17" fill="#EEF3FA"/>
+    <text x="638" y="716" fill="#516B8D" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">人工智能训练数据</text>
   </g>
 </svg>
