@@ -35,7 +35,7 @@
 ### 方式二：Git 克隆安装
 
 ```bash
-git clone https://github.com/sunyifeisb-art/CNKI-PDF-.git
+git clone https://github.com/sunyifeisb-art/CNKI-PDF-Downloader.git
 ```
 
 克隆后同样需要：
