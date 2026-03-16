@@ -1,7 +1,7 @@
 # CNKI论文PDF批量下载助手
 
 <p align="center">
-  <img src="./assets/readme-hero.svg" alt="CNKI论文PDF批量下载助手预览" width="100%" />
+  <img src="./assets/readme-hero.svg?v=20260316-1" alt="CNKI论文PDF批量下载助手预览" width="100%" />
 </p>
 
 <p align="center">
@@ -59,7 +59,7 @@ git clone https://github.com/sunyifeisb-art/CNKI-PDF-Downloader.git
 ## 使用流程
 
 <p>
-  <img src="./assets/readme-flow.svg" alt="使用流程说明图" width="100%" />
+  <img src="./assets/readme-flow.svg?v=20260316-1" alt="使用流程说明图" width="100%" />
 </p>
 
 1. 打开知网检索结果页。
