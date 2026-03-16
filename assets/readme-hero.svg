@@ -28,7 +28,7 @@
   <circle cx="144" cy="814" r="104" fill="#DCEBFF"/>
 
   <g filter="url(#shadow)">
-    <rect x="136" y="116" width="1328" height="596" rx="34" fill="url(#panel)" stroke="#C8DCF6"/>
+    <rect x="136" y="116" width="1328" height="430" rx="34" fill="url(#panel)" stroke="#C8DCF6"/>
     <rect x="170" y="148" width="1280" height="44" rx="22" fill="#EFF5FD"/>
     <circle cx="1360" cy="170" r="54" fill="url(#primary)"/>
     <circle cx="1360" cy="170" r="38" stroke="#A9CBF5" stroke-width="2" stroke-dasharray="6 6"/>
@@ -47,16 +47,5 @@
     <text x="273" y="490" fill="#F7FBFF" font-size="30" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">抓取本页</text>
     <rect x="438" y="448" width="204" height="64" rx="32" fill="#F7FBFF" stroke="#C7DCF6"/>
     <text x="495" y="490" fill="#35557D" font-size="30" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">批量下载</text>
-
-    <rect x="214" y="560" width="980" height="108" rx="24" fill="#FBFDFF" stroke="#D5E4F7"/>
-    <rect x="242" y="588" width="16" height="16" rx="4" fill="#5C95DE"/>
-    <text x="286" y="602" fill="#223754" font-size="34" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">示例论文：生成式人工智能法治的制度逻辑与实现路径</text>
-    <text x="286" y="644" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">作者、来源、日期、被引、下载、关键词与摘要一屏查看</text>
-
-    <rect x="1222" y="560" width="172" height="108" rx="24" fill="#F8FBFF" stroke="#D5E4F7"/>
-    <text x="1252" y="598" fill="#48617E" font-size="18" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">期刊等级</text>
-    <rect x="1242" y="614" width="118" height="34" rx="17" fill="#FFF5D8" stroke="#F0D486"/>
-    <text x="1271" y="636" fill="#8A6111" font-size="16" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">PKU 北大核心</text>
-
   </g>
 </svg>
