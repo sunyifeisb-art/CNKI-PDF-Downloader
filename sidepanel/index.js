@@ -197,10 +197,12 @@ async function fetchDetailSnapshot(url) {
     const pageTitle = normalizeText(doc.title);
     const bodyText = normalizeText(doc.body?.innerText || "");
     const headText = `${pageTitle} ${bodyText.slice(0, 200)}`;
+    const paywallPattern = /选择下载方式|仅下载本文|开通会员|产品不在有效期范围之内|作者本人免费下载|单篇下载|超级会员|文献资源包|当前文献/i;
 
     let pageType = "detail";
     if (/安全验证/.test(headText)) pageType = "verify";
     if (/账号登录|短信登录|用户登录|登录中国知网/.test(headText)) pageType = "login";
+    if (paywallPattern.test(`${pageTitle} ${bodyText.slice(0, 1000)}`)) pageType = "paywall";
 
     const titleNode = doc.querySelector(".wx-tit h1, .brief h1, .title h1, h1");
     if (titleNode) titleNode.querySelectorAll("span").forEach((node) => node.remove());
@@ -731,9 +733,15 @@ function applyDetailSnapshotToPaper(paper, result) {
   if (result?.sourceUrl && (!paper.sourceUrl || isLikelyJournalSourceUrl(result.sourceUrl))) {
     paper.sourceUrl = result.sourceUrl;
   }
-  if (result?.pdfLink) paper.pdfLink = result.pdfLink;
-  if (result?.downloadMode) paper.downloadMode = result.downloadMode;
-  if (result?.downloadLabel) paper.downloadLabel = result.downloadLabel;
+  if (result?.pageType === "paywall" || result?.pageType === "verify" || result?.pageType === "login" || result?.cajOnly) {
+    paper.pdfLink = "";
+    paper.downloadMode = "";
+    paper.downloadLabel = result?.downloadLabel || "";
+  } else {
+    if (result?.pdfLink) paper.pdfLink = result.pdfLink;
+    if (result?.downloadMode) paper.downloadMode = result.downloadMode;
+    if (result?.downloadLabel) paper.downloadLabel = result.downloadLabel;
+  }
   if (result?.level) paper.level = normalizeLevelValue(result.level) || paper.level;
 }
 
@@ -771,6 +779,12 @@ async function fetchPdfLinks() {
           "error",
           `详情页被拦截: ${paper.title}`,
           `当前返回的是${result.pageType === "verify" ? "安全验证" : "登录"}页面，请先在当前知网页签完成验证/登录后重试。\n详情页: ${paper.detailUrl}`
+        );
+      } else if (result?.pageType === "paywall") {
+        addLog(
+          "error",
+          `当前账号无本文下载权限: ${paper.title}`,
+          "当前详情页进入了付费/权限页面，插件会自动跳过此条目。"
         );
       } else if (result?.cajOnly) {
         addLog(
@@ -922,12 +936,13 @@ function isMatchingDownloadItem(downloadItem, expectedUrl) {
   return candidates.some((value) => /cnki|kns|download/i.test(value));
 }
 
-function waitForMatchingDownload(expectedUrl, timeoutMs) {
+function waitForMatchingDownload(expectedUrl, timeoutMs, createTimeoutMs = 8000) {
   return new Promise((resolve) => {
     let matchedId = null;
 
     const cleanup = () => {
       window.clearTimeout(timer);
+      window.clearTimeout(createTimer);
       chrome.downloads.onCreated.removeListener(onCreated);
       chrome.downloads.onChanged.removeListener(onChanged);
     };
@@ -945,9 +960,13 @@ function waitForMatchingDownload(expectedUrl, timeoutMs) {
     };
 
     const timer = window.setTimeout(() => finish("timeout", "下载等待超时"), timeoutMs);
+    const createTimer = window.setTimeout(() => {
+      if (matchedId == null) finish("not_created", "浏览器没有创建下载任务");
+    }, createTimeoutMs);
     const onCreated = (item) => {
       if (!isMatchingDownloadItem(item, expectedUrl)) return;
       matchedId = item.id;
+      window.clearTimeout(createTimer);
       if (item.state === "complete") finish("complete");
       else if (item.state === "interrupted") finish("interrupted", item.error || "下载中断");
     };
@@ -997,7 +1016,7 @@ async function triggerDownloadFromDetailPage(detailUrl) {
     if (!tab?.id) throw new Error("无法创建详情页标签");
     await waitForTabComplete(tab.id, 20000);
 
-    const watchDownload = waitForMatchingDownload("", 12000);
+    const watchDownload = waitForMatchingDownload("", 12000, 5000);
     const [result] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       world: "MAIN",
@@ -1044,6 +1063,7 @@ async function triggerDownloadFromDetailPage(detailUrl) {
 
 function getDownloadFailureMessage(downloadResult) {
   if (!downloadResult) return "浏览器没有创建下载任务";
+  if (downloadResult.status === "not_created") return "浏览器没有创建下载任务";
   if (downloadResult.status === "timeout") return "下载等待超时，浏览器可能仍在处理";
   if (downloadResult.status === "interrupted") return downloadResult.error || "下载中断";
   if (isHtmlDownloadItem(downloadResult.item)) return "下载结果是 HTML 页面，不是真正的 PDF 文件";
@@ -1059,6 +1079,9 @@ function getSnapshotBlockingMessage(result, paper) {
   if (result?.pageType === "login") {
     return "知网返回登录页，需先登录后再下载";
   }
+  if (result?.pageType === "paywall") {
+    return "当前账号无本文下载权限，已自动跳过";
+  }
   if (result?.cajOnly && !isUsableDownloadLink(paper)) {
     return "该条目当前只提供 CAJ 下载，没有可用的 PDF 下载入口";
   }
@@ -1073,7 +1096,7 @@ async function tryDownloadViaKnownLink(paper) {
     return { ok: false, message: "当前没有可用的 PDF 直链" };
   }
 
-  const watchDownload = waitForMatchingDownload(paper.pdfLink, 90000);
+  const watchDownload = waitForMatchingDownload(paper.pdfLink, 90000, 8000);
   await triggerIframeDownload(paper.pdfLink, paper.detailUrl);
   const downloadResult = await watchDownload;
   const message = getDownloadFailureMessage(downloadResult);
