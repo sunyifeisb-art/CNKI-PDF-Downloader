@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNKI论文PDF批量下载助手</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <button class="hero-help-btn" id="btn-help" type="button" aria-haspopup="dialog" aria-controls="help-dialog" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M9.75 9a2.25 2.25 0 1 1 3.97 1.46c-.6.64-1.47 1.14-1.72 2.04"></path>
+          <circle cx="12" cy="17" r="1"></circle>
+        </svg>
+        <span>使用说明</span>
+      </button>
+      <div class="hero-copy">
+        <h1>CNKI论文PDF批量下载助手</h1>
+        <p class="hero-text">下载前提是你本身拥有知网下载权限，插件仅提供快捷下载、抓链、期刊等级补全与队列整理能力。</p>
+      </div>
+      <div class="hero-radar">
+        <div class="radar-ring"></div>
+        <div class="radar-core">
+          <span id="hero-total">0</span>
+          <small>当前条目</small>
+        </div>
+      </div>
+    </header>
+
+    <section class="help-dialog" id="help-dialog" hidden aria-hidden="true" role="dialog" aria-labelledby="help-title">
+      <div class="help-backdrop" id="help-backdrop"></div>
+      <div class="help-card">
+        <div class="help-head">
+          <div>
+            <p class="help-kicker">快速上手</p>
+            <h2 id="help-title">本插件怎么用</h2>
+          </div>
+          <button class="help-close-btn" id="btn-help-close" type="button" aria-label="关闭使用说明">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12"></path>
+              <path d="M18 6L6 18"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="help-body">
+          <article class="help-block">
+            <span class="help-step">1</span>
+            <div>
+              <h3>打开知网检索结果页</h3>
+              <p>先在知网搜索你的主题，停留在有论文列表的结果页面，再打开本侧边栏插件。</p>
+            </div>
+          </article>
+          <article class="help-block">
+            <span class="help-step">2</span>
+            <div>
+              <h3>点击“抓取本页”</h3>
+              <p>插件会先把当前页面的论文加入队列，再自动抓取详情页里的 PDF 下载入口、作者、关键词和期刊等级。</p>
+            </div>
+          </article>
+          <article class="help-block">
+            <span class="help-step">3</span>
+            <div>
+              <h3>查看期刊等级和下载状态</h3>
+              <p>列表里会显示北大核心、南大核心、AMI 等等级徽章；显示“下载 PDF”说明该条目已经拿到可用链接。</p>
+            </div>
+          </article>
+          <article class="help-block">
+            <span class="help-step">4</span>
+            <div>
+              <h3>WebVPN 开关是做什么的</h3>
+              <p>如果你是通过学校或机构的 WebVPN 进入知网，就把 WebVPN 打开，插件会按当前 WebVPN 地址去抓链接和下载；如果你本来就在知网直连环境里，一般不用打开。</p>
+            </div>
+          </article>
+          <article class="help-block">
+            <span class="help-step">5</span>
+            <div>
+              <h3>点击“批量下载”</h3>
+              <p>插件会按顺序触发真实 PDF 下载。前提是你的账号、机构或 WebVPN 本身具备该文献的知网下载权限。</p>
+            </div>
+          </article>
+          <article class="help-block">
+            <span class="help-step">6</span>
+            <div>
+              <h3>下载失败时看哪里</h3>
+              <p>如果出现登录页、安全验证、只有 CAJ、没有 PDF 权限等情况，会在底部错误日志里写明原因，处理后再重试即可。</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card tone-amber">
+        <span class="summary-label">待抓链</span>
+        <strong id="summary-pending">0</strong>
+      </article>
+      <article class="summary-card tone-sage">
+        <span class="summary-label">可下载</span>
+        <strong id="summary-ready">0</strong>
+      </article>
+      <article class="summary-card tone-ink">
+        <span class="summary-label">已完成</span>
+        <strong id="summary-success">0</strong>
+      </article>
+    </section>
+
+    <section class="toolbar-card">
+      <div class="toolbar-main">
+        <button class="btn btn-primary" id="btn-fetch-links">抓取本页</button>
+        <button class="btn btn-secondary" id="btn-batch-dl">批量下载<span id="selected-pill" hidden></span></button>
+      </div>
+      <div class="toolbar-meta">
+        <label class="toggle-chip">
+          <input type="checkbox" id="toggle-webvpn">
+          <span>WebVPN</span>
+        </label>
+        <label class="toggle-chip">
+          <input type="checkbox" id="toggle-levels">
+          <span>期刊等级</span>
+        </label>
+        <button class="btn btn-ghost" id="btn-clear">清空队列</button>
+      </div>
+      <div class="progress-wrap" id="progress-wrap" hidden>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <span id="progress-text">处理中...</span>
+      </div>
+      <p class="toolbar-status" id="toolbar-status">准备就绪</p>
+    </section>
+
+    <section class="filters-card">
+      <div class="search-row">
+        <label class="search-box">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          <input type="search" id="search-input" placeholder="搜索标题、作者、期刊、关键词">
+        </label>
+      </div>
+
+      <div class="filter-row">
+        <div class="chip-group" id="view-chips">
+          <button class="view-chip active" data-view="all">全部</button>
+          <button class="view-chip" data-view="ready">可下载</button>
+          <button class="view-chip" data-view="pending">待抓链</button>
+          <button class="view-chip" data-view="failed">下载失败</button>
+        </div>
+        <div class="chip-group sort-group" id="sort-chips">
+          <button class="sort-chip active" data-sort="">默认</button>
+          <button class="sort-chip" data-sort="date">时间</button>
+          <button class="sort-chip" data-sort="quote">被引</button>
+          <button class="sort-chip" data-sort="download">下载</button>
+        </div>
+      </div>
+
+      <div class="selection-row">
+        <label class="checkbox-line">
+          <input type="checkbox" id="select-all-visible">
+          <span>选择当前筛选结果</span>
+        </label>
+        <button class="text-action" id="select-ready-only">仅选可下载</button>
+      </div>
+    </section>
+
+    <section class="list-wrap">
+      <div class="list-head">
+        <span id="result-count">0 条结果</span>
+        <span id="selection-count">未选择</span>
+      </div>
+      <div class="paper-list" id="paper-list"></div>
+    </section>
+
+    <section class="log-card">
+      <button class="log-toggle" id="log-toggle" aria-expanded="false">
+        <span>错误日志</span>
+        <span class="log-badge" id="log-badge" hidden>0</span>
+      </button>
+      <div class="log-panel" id="log-panel" hidden>
+        <div class="log-actions">
+          <button class="btn btn-ghost" id="log-copy-all">复制全部</button>
+          <button class="btn btn-ghost" id="log-clear">清空</button>
+        </div>
+        <div class="log-list" id="log-list"></div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p id="footer-status">0 篇</p>
+      <span>CNKI论文PDF批量下载助手 v0.1.0</span>
+    </footer>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>
