@@ -1,0 +1,49 @@
+<svg width="1600" height="560" viewBox="0 0 1600 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="flowbg" x1="0" y1="0" x2="1600" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6FBFF"/>
+      <stop offset="1" stop-color="#DCEBFB"/>
+    </linearGradient>
+    <linearGradient id="step" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4E91E9"/>
+      <stop offset="1" stop-color="#255FAF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="560" rx="36" fill="url(#flowbg)"/>
+  <text x="102" y="104" fill="#20324D" font-size="52" font-family="Georgia, 'Songti SC', serif" font-weight="700">使用流程</text>
+  <g>
+    <rect x="96" y="166" width="276" height="248" rx="28" fill="#FDFEFF" stroke="#D4E3F7"/>
+    <circle cx="144" cy="214" r="24" fill="url(#step)"/>
+    <text x="136" y="223" fill="#F7FBFF" font-size="24" font-family="'Helvetica Neue', sans-serif" font-weight="700">1</text>
+    <text x="128" y="278" fill="#223753" font-size="34" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">打开知网页面</text>
+    <text x="128" y="330" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">停留在知网检索结果页</text>
+    <text x="128" y="364" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">再打开扩展侧边栏</text>
+  </g>
+  <g>
+    <rect x="408" y="166" width="276" height="248" rx="28" fill="#FDFEFF" stroke="#D4E3F7"/>
+    <circle cx="456" cy="214" r="24" fill="url(#step)"/>
+    <text x="448" y="223" fill="#F7FBFF" font-size="24" font-family="'Helvetica Neue', sans-serif" font-weight="700">2</text>
+    <text x="440" y="278" fill="#223753" font-size="34" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">抓取本页</text>
+    <text x="440" y="330" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">加入当前页论文</text>
+    <text x="440" y="364" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">自动抓取 PDF 链接</text>
+  </g>
+  <g>
+    <rect x="720" y="166" width="276" height="248" rx="28" fill="#FDFEFF" stroke="#D4E3F7"/>
+    <circle cx="768" cy="214" r="24" fill="url(#step)"/>
+    <text x="760" y="223" fill="#F7FBFF" font-size="24" font-family="'Helvetica Neue', sans-serif" font-weight="700">3</text>
+    <text x="752" y="278" fill="#223753" font-size="34" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">检查信息</text>
+    <text x="752" y="330" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">看期刊等级徽章</text>
+    <text x="752" y="364" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">确认可下载状态</text>
+  </g>
+  <g>
+    <rect x="1032" y="166" width="276" height="248" rx="28" fill="#FDFEFF" stroke="#D4E3F7"/>
+    <circle cx="1080" cy="214" r="24" fill="url(#step)"/>
+    <text x="1072" y="223" fill="#F7FBFF" font-size="24" font-family="'Helvetica Neue', sans-serif" font-weight="700">4</text>
+    <text x="1064" y="278" fill="#223753" font-size="34" font-family="'PingFang SC', 'Helvetica Neue', sans-serif" font-weight="700">批量下载</text>
+    <text x="1064" y="330" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">按顺序触发真实 PDF 下载</text>
+    <text x="1064" y="364" fill="#4A627E" font-size="24" font-family="'PingFang SC', 'Helvetica Neue', sans-serif">错误日志会给出简短原因</text>
+  </g>
+  <path d="M374 290H404" stroke="#7FADE8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M686 290H716" stroke="#7FADE8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M998 290H1028" stroke="#7FADE8" stroke-width="8" stroke-linecap="round"/>
+</svg>
