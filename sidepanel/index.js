@@ -426,6 +426,229 @@ function createSafeFilename(title, maxLength = 120) {
   return `${base || "cnki-paper"}.pdf`;
 }
 
+function getFilenameBasename(value) {
+  return String(value || "").split(/[\\/]/).pop() || "";
+}
+
+function searchDownloads(query) {
+  return new Promise((resolve) => {
+    chrome.downloads.search(query, (items) => {
+      resolve(items || []);
+    });
+  });
+}
+
+function normalizeActionText(value) {
+  return String(value || "")
+    .normalize("NFKC")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function pickCnkiSessionCandidate(candidates, type) {
+  const scored = (candidates || [])
+    .map((candidate) => {
+      const text = normalizeActionText(candidate?.text || "");
+      const meta = normalizeActionText(candidate?.meta || "");
+      const haystack = `${text} ${meta}`;
+      const rect = candidate?.rect || {};
+      const isTopArea = Number.isFinite(rect.top) ? rect.top <= 220 : false;
+      const isRightArea = Number.isFinite(rect.left) ? rect.left >= 680 : false;
+      let score = -1000;
+
+      if (type === "account") {
+        score = 0;
+        if (/退出|注销/.test(haystack)) score -= 200;
+        if (/个人账户|机构账户|我的账户|账号中心/.test(haystack)) score += 150;
+        if (/个人|账户|账号/.test(haystack)) score += 90;
+        if (/user|account|profile|avatar|login/.test(haystack)) score += 60;
+        if (isTopArea) score += 25;
+        if (isRightArea) score += 30;
+      } else if (type === "logout") {
+        score = 0;
+        if (/^退出$|退出登录|注销/.test(text) || /^退出$|退出登录|注销/.test(haystack)) score += 200;
+        if (/退出|注销/.test(haystack)) score += 120;
+        if (isTopArea) score += 10;
+      } else if (type === "ip-login") {
+        score = 0;
+        if (/^ip登录$|^ip登陆$/.test(text)) score += 220;
+        if (/ip登录|ip登陆|ip认证/.test(haystack)) score += 180;
+        if (/机构账户|机构登录|机构用户/.test(haystack)) score += 130;
+        if (/校外访问|机构访问/.test(haystack)) score += 90;
+        if (/退出|注销/.test(haystack)) score -= 220;
+        if (isTopArea) score += 10;
+        if (isRightArea) score += 10;
+      }
+
+      return { candidate, score };
+    })
+    .filter((item) => item.score > 0)
+    .sort((left, right) => right.score - left.score);
+
+  return scored[0]?.candidate || null;
+}
+
+function normalizeFileMatchText(value) {
+  return String(value || "")
+    .normalize("NFKC")
+    .replace(/\.pdf$/i, "")
+    .replace(/\s*\(\d+\)$/i, "")
+    .replace(/[^\u4e00-\u9fa5a-z0-9]+/gi, "")
+    .toLowerCase();
+}
+
+function getPrimaryAuthorToken(author) {
+  return String(author || "")
+    .split(/[;,，、\s]+/)
+    .map((item) => item.trim())
+    .find(Boolean) || "";
+}
+
+function isExistingFilenameMatch(filename, paper) {
+  const normalizedFilename = normalizeFileMatchText(getFilenameBasename(filename));
+  const normalizedTitle = normalizeFileMatchText(paper?.title || "");
+  if (!normalizedFilename || !normalizedTitle) return false;
+  if (!normalizedFilename.includes(normalizedTitle)) return false;
+
+  const authorToken = getPrimaryAuthorToken(paper?.author);
+  if (!authorToken) return true;
+
+  const normalizedAuthor = normalizeFileMatchText(authorToken);
+  const hasExtraText = normalizedFilename !== normalizedTitle;
+  if (!hasExtraText) return true;
+  return normalizedAuthor ? normalizedFilename.includes(normalizedAuthor) : true;
+}
+
+async function findExistingDownloadedFile(paper) {
+  const expectedFilename = createSafeFilename(paper?.title || "");
+  const matchedItems = await searchDownloads({
+    state: "complete",
+    exists: true,
+    limit: 300,
+  });
+
+  const matchedItem = matchedItems.find((item) => isExistingFilenameMatch(item?.filename, paper));
+
+  return matchedItem
+    ? { expectedFilename, matchedItem }
+    : { expectedFilename, matchedItem: null };
+}
+
+async function refreshCnkiIpLoginSession() {
+  const tab = await getActiveTab();
+  if (!tab?.id) {
+    return { ok: false, stage: "tab", error: "无活动标签页" };
+  }
+
+  const [{ result }] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    world: "MAIN",
+    args: [normalizeActionText.toString(), pickCnkiSessionCandidate.toString()],
+    func: async (normalizeActionTextSource, pickCnkiSessionCandidateSource) => {
+      const helpers = new Function(`
+        ${normalizeActionTextSource}
+        ${pickCnkiSessionCandidateSource}
+        return { normalizeActionText, pickCnkiSessionCandidate };
+      `)();
+      const { normalizeActionText, pickCnkiSessionCandidate } = helpers;
+      const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+      const isVisible = (node) => {
+        if (!(node instanceof Element)) return false;
+        const style = window.getComputedStyle(node);
+        const rect = node.getBoundingClientRect();
+        return !node.hidden
+          && style.display !== "none"
+          && style.visibility !== "hidden"
+          && style.opacity !== "0"
+          && rect.width > 0
+          && rect.height > 0;
+      };
+
+      const clickElement = (node) => {
+        if (!(node instanceof Element)) return false;
+        node.scrollIntoView({ block: "center", inline: "center", behavior: "auto" });
+        ["pointerdown", "mousedown", "mouseup", "click"].forEach((eventName) => {
+          node.dispatchEvent(new MouseEvent(eventName, { bubbles: true, cancelable: true, view: window }));
+        });
+        if (typeof node.click === "function") node.click();
+        return true;
+      };
+
+      const collectCandidates = () => {
+        const selector = [
+          "a",
+          "button",
+          "[role='button']",
+          "[onclick]",
+          "input[type='button']",
+          "input[type='submit']",
+          "div",
+          "span",
+        ].join(",");
+
+        return Array.from(document.querySelectorAll(selector))
+          .filter((node) => isVisible(node))
+          .map((node) => {
+            const text = String(node.textContent || "").replace(/\s+/g, " ").trim();
+            const title = node.getAttribute("title") || "";
+            const aria = node.getAttribute("aria-label") || "";
+            const id = node.id || "";
+            const className = typeof node.className === "string" ? node.className : "";
+            const href = node.getAttribute("href") || "";
+            const rect = node.getBoundingClientRect();
+            return {
+              element: node,
+              text,
+              meta: [title, aria, id, className, href].join(" "),
+              rect: { left: rect.left, top: rect.top },
+            };
+          })
+          .filter((candidate) => candidate.text || normalizeActionText(candidate.meta));
+      };
+
+      const waitForCandidate = async (type, timeoutMs) => {
+        const deadline = Date.now() + timeoutMs;
+        while (Date.now() < deadline) {
+          const match = pickCnkiSessionCandidate(collectCandidates(), type);
+          if (match) return match;
+          await sleep(250);
+        }
+        return null;
+      };
+
+      let logoutCandidate = await waitForCandidate("logout", 600);
+      if (!logoutCandidate) {
+        const accountCandidate = pickCnkiSessionCandidate(collectCandidates(), "account");
+        if (!accountCandidate || !clickElement(accountCandidate.element)) {
+          return { ok: false, stage: "account", error: "未找到账号入口" };
+        }
+        await sleep(700);
+        logoutCandidate = await waitForCandidate("logout", 4000);
+      }
+
+      if (!logoutCandidate || !clickElement(logoutCandidate.element)) {
+        return { ok: false, stage: "logout", error: "未找到退出按钮" };
+      }
+
+      await sleep(1200);
+      const ipLoginCandidate = await waitForCandidate("ip-login", 8000);
+      if (!ipLoginCandidate || !clickElement(ipLoginCandidate.element)) {
+        return { ok: false, stage: "ip-login", error: "未找到 IP 登录入口" };
+      }
+
+      await sleep(2500);
+      return {
+        ok: true,
+        accountText: logoutCandidate.text || "",
+        loginText: ipLoginCandidate.text || "",
+      };
+    },
+  });
+
+  return result || { ok: false, stage: "script", error: "页面脚本未返回结果" };
+}
+
 function isInvalidStoredDownload(paper) {
   return (
     !paper ||
@@ -1136,6 +1359,19 @@ async function downloadPaper(id, index = null, total = null) {
   const paper = papers.find((item) => item.id === id);
   if (!paper || !isPaperDownloadable(paper)) return;
 
+  const existingFile = await findExistingDownloadedFile(paper);
+  if (existingFile.matchedItem) {
+    const existingPath = existingFile.matchedItem.filename || existingFile.expectedFilename;
+    setDownloadState(id, "success", "已存在同名文件，已跳过");
+    setStatus(
+      index != null && total != null
+        ? `第 ${index + 1}/${total} 篇已存在同名文件，已跳过：${paper.title}`
+        : `已存在同名文件，已跳过：${paper.title}`
+    );
+    addLog("info", `跳过已下载文献: ${paper.title}`, `检测到同名文件：${existingPath}`);
+    return;
+  }
+
   setDownloadState(id, "downloading");
   setStatus(
     index != null && total != null
@@ -1205,6 +1441,7 @@ async function downloadPaper(id, index = null, total = null) {
 
 async function downloadSelected() {
   let ids = Array.from(selectedIds).filter((id) => isPaperDownloadable(papers.find((item) => item.id === id)));
+  let interruptedByVerify = false;
 
   if (ids.length === 0) {
     const readyIds = papers.filter((paper) => isPaperDownloadable(paper)).map((paper) => paper.id);
@@ -1244,7 +1481,33 @@ async function downloadSelected() {
     if (!paper || !isPaperDownloadable(paper)) continue;
     if (downloadState[id]?.status === "success") continue;
     await downloadPaper(id, index, ids.length);
+    const errorText = downloadState[id]?.error || "";
+    if (/安全验证/.test(errorText)) {
+      setStatus("检测到知网安全验证，批量下载已暂停，请先人工完成验证后再继续");
+      interruptedByVerify = true;
+      break;
+    }
     await new Promise((resolve) => window.setTimeout(resolve, 1800 + Math.random() * 1600));
+  }
+
+  if (!interruptedByVerify && ids.length > 0) {
+    setStatus(`批量下载完成，正在自动刷新 IP 登录...`);
+    try {
+      const refreshResult = await refreshCnkiIpLoginSession();
+      if (refreshResult?.ok) {
+        addLog("info", "已自动刷新 IP 登录", `退出并重新登录成功，入口：${refreshResult.loginText || "IP登录"}`);
+        setStatus(`批量下载完成，共 ${ids.length} 篇；已自动刷新 IP 登录`);
+        return;
+      }
+
+      addLog("error", "自动刷新 IP 登录失败", `${refreshResult?.error || "未知错误"}\n阶段: ${refreshResult?.stage || "unknown"}`);
+      setStatus(`批量下载完成，共 ${ids.length} 篇；自动刷新 IP 登录失败，请手动退出后点 IP 登录`);
+      return;
+    } catch (error) {
+      addLog("error", "自动刷新 IP 登录失败", error?.message || "未知错误");
+      setStatus(`批量下载完成，共 ${ids.length} 篇；自动刷新 IP 登录失败，请手动退出后点 IP 登录`);
+      return;
+    }
   }
 
   setStatus(`批量下载流程已触发，共 ${ids.length} 篇`);
