@@ -469,11 +469,15 @@ function pickCnkiSessionCandidate(candidates, type) {
         if (/^退出$|退出登录|注销/.test(text) || /^退出$|退出登录|注销/.test(haystack)) score += 200;
         if (/退出|注销/.test(haystack)) score += 120;
         if (isTopArea) score += 10;
+      } else if (type === "institution-login") {
+        score = 0;
+        if (/^机构登录$|^机构登陆$/.test(text)) score += 240;
+        if (/机构登录|机构登陆|机构账号登录|机构用户登录/.test(haystack)) score += 180;
+        if (/ip登录|ip登陆/.test(haystack)) score -= 160;
       } else if (type === "ip-login") {
         score = 0;
         if (/^ip登录$|^ip登陆$/.test(text)) score += 220;
         if (/ip登录|ip登陆|ip认证/.test(haystack)) score += 180;
-        if (/机构账户|机构登录|机构用户/.test(haystack)) score += 130;
         if (/校外访问|机构访问/.test(haystack)) score += 90;
         if (/退出|注销/.test(haystack)) score -= 220;
         if (isTopArea) score += 10;
@@ -632,6 +636,14 @@ async function refreshCnkiIpLoginSession() {
       }
 
       await sleep(1200);
+      let institutionLoginCandidate = await waitForCandidate("institution-login", 4000);
+      if (institutionLoginCandidate) {
+        if (!clickElement(institutionLoginCandidate.element)) {
+          return { ok: false, stage: "institution-login", error: "未找到机构登录入口" };
+        }
+        await sleep(1200);
+      }
+
       const ipLoginCandidate = await waitForCandidate("ip-login", 8000);
       if (!ipLoginCandidate || !clickElement(ipLoginCandidate.element)) {
         return { ok: false, stage: "ip-login", error: "未找到 IP 登录入口" };
@@ -641,6 +653,7 @@ async function refreshCnkiIpLoginSession() {
       return {
         ok: true,
         accountText: logoutCandidate.text || "",
+        institutionLoginText: institutionLoginCandidate?.text || "",
         loginText: ipLoginCandidate.text || "",
       };
     },
