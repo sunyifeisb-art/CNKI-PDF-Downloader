@@ -52,6 +52,7 @@
   `;
 
   const removedCache = new Map();
+  let multiFetchStopped = false;
 
   function getTitleLinks() {
     for (const selector of TITLE_SELECTORS) {
@@ -191,6 +192,72 @@
     return { ok: true, added, total: links.length };
   }
 
+  // 查找下一页按钮
+  function findNextPageBtn() {
+    const selectors = [
+      'a[id*="PageNext"]',
+      'a[title*="下一页"]',
+      'a[class*="next"]',
+      '.page-item.next a',
+      '.page-next',
+      '#PageNext',
+    ];
+    
+    for (const selector of selectors) {
+      const btn = document.querySelector(selector);
+      if (btn && !btn.disabled && btn.style.display !== 'none') {
+        return btn;
+      }
+    }
+    return null;
+  }
+
+  // 检查是否有更多页面
+  function hasNextPage() {
+    const btn = findNextPageBtn();
+    if (!btn) return false;
+    
+    // 检查按钮是否可点击
+    const isDisabled = btn.disabled || 
+                       btn.classList?.contains('disabled') || 
+                       btn.getAttribute('aria-disabled') === 'true';
+    return !isDisabled;
+  }
+
+  // 点击下一页
+  function goToNextPage() {
+    const btn = findNextPageBtn();
+    if (btn) {
+      btn.click();
+      return true;
+    }
+    return false;
+  }
+
+  // 等待页面加载完成
+  function waitForPageLoad(timeout = 15000) {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      
+      function checkPageReady() {
+        const links = getTitleLinks();
+        if (links.length > 0) {
+          resolve(true);
+          return;
+        }
+        
+        if (Date.now() - startTime > timeout) {
+          reject(new Error('Page load timeout'));
+          return;
+        }
+        
+        setTimeout(checkPageReady, 300);
+      }
+      
+      checkPageReady();
+    });
+  }
+
   async function injectButtons() {
     const links = getTitleLinks();
     if (links.length === 0) return;
@@ -282,6 +349,66 @@
 
     if (message?.type === "ADD_ALL_PAGE") {
       addAllOnPage(Boolean(message.useWebVPN)).then(sendResponse);
+      return true;
+    }
+
+    if (message?.type === "START_MULTI_FETCH") {
+      multiFetchStopped = false;
+      sendResponse({ ok: true });
+      return true;
+    }
+
+    if (message?.type === "STOP_MULTI_FETCH") {
+      multiFetchStopped = true;
+      sendResponse({ ok: true });
+      return true;
+    }
+
+    if (message?.type === "MULTI_FETCH_STEP") {
+      (async () => {
+        try {
+          if (multiFetchStopped) {
+            sendResponse({ ok: false, stopped: true });
+            return;
+          }
+
+          const useWebVPN = Boolean(message.useWebVPN);
+          
+          // 抓取当前页
+          const result = await addAllOnPage(useWebVPN);
+          
+          if (!result.ok) {
+            sendResponse({ ok: false, error: result.error });
+            return;
+          }
+
+          // 检查是否有下一页
+          const hasMore = hasNextPage();
+          
+          if (!hasMore) {
+            sendResponse({ ok: true, added: result.added, total: result.total, done: true });
+            return;
+          }
+
+          // 点击下一页
+          const clicked = goToNextPage();
+          
+          if (!clicked) {
+            sendResponse({ ok: true, added: result.added, total: result.total, done: true });
+            return;
+          }
+
+          // 等待页面加载
+          await waitForPageLoad();
+          
+          // 等待一下，模拟人类阅读
+          await new Promise(r => setTimeout(r, 800 + Math.random() * 1200));
+          
+          sendResponse({ ok: true, added: result.added, total: result.total, done: false });
+        } catch (e) {
+          sendResponse({ ok: false, error: e.message });
+        }
+      })();
       return true;
     }
   });

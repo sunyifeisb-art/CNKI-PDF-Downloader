@@ -110,6 +110,7 @@
     <section class="toolbar-card">
     <div class="toolbar-main">
       <button class="btn btn-primary" id="btn-fetch-links">抓取本页</button>
+      <button class="btn btn-primary" id="btn-fetch-multi" style="background: linear-gradient(180deg, #10b981, #059669);">批量翻页抓取</button>
       <button class="btn btn-secondary" id="btn-batch-dl">批量下载<span id="selected-pill" hidden></span></button>
     </div>
     <div class="toolbar-meta">
@@ -126,6 +127,19 @@
       <button class="btn btn-ghost" id="btn-import-queue">导入队列</button>
       <button class="btn btn-ghost" id="btn-clear">清空队列</button>
     </div>
+      <!-- 批量翻页设置 -->
+      <div class="multi-fetch-settings" id="multi-fetch-settings" style="display: none; margin-top: 10px; padding: 12px; border-top: 1px solid rgba(120,151,193,0.2);">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <label style="font-size: 12px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center;">
+            抓取页数：
+            <input type="number" id="fetch-page-count" value="5" min="1" max="50" 
+                   style="width: 70px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(120,151,193,0.3); background: rgba(248,252,255,0.6); font-size: 12px;">
+          </label>
+          <button class="btn btn-ghost" id="btn-start-multi" style="min-height: 32px; padding: 0 12px; background: linear-gradient(180deg, #10b981, #059669); color: white;">开始抓取</button>
+          <button class="btn btn-ghost" id="btn-stop-multi" style="min-height: 32px; padding: 0 12px; display: none;">停止</button>
+          <span id="multi-fetch-status" style="font-size: 12px; color: var(--ink-soft);"></span>
+        </div>
+      </div>
       <div class="progress-wrap" id="progress-wrap" hidden>
         <div class="progress-track">
           <div class="progress-fill" id="progress-fill"></div>

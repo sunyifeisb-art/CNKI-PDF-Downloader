@@ -15,6 +15,10 @@ const logs = [];
 const levelCache = new Map();
 const levelPending = new Map();
 
+// 多页抓取状态
+let multiFetchActive = false;
+let multiFetchAbort = false;
+
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
@@ -1391,6 +1395,111 @@ function copyPaperInfo(id, button) {
   });
 }
 
+// ===== 新增功能：多页批量抓取 =====
+async function startMultiFetch(pageCount) {
+  if (multiFetchActive) return;
+  
+  multiFetchActive = true;
+  multiFetchAbort = false;
+  
+  const multiSettingsEl = $("#multi-fetch-settings");
+  const statusEl = $("#multi-fetch-status");
+  const startBtn = $("#btn-start-multi");
+  const stopBtn = $("#btn-stop-multi");
+  
+  if (multiSettingsEl) multiSettingsEl.style.display = "block";
+  if (startBtn) startBtn.style.display = "none";
+  if (stopBtn) stopBtn.style.display = "inline-flex";
+  
+  let totalAdded = 0;
+  let currentPage = 1;
+  
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) {
+      setStatus("需要在知网页面上使用");
+      return;
+    }
+    
+    await chrome.tabs.sendMessage(tab.id, { type: "START_MULTI_FETCH", useWebVPN: settings.useWebVPN });
+    
+    while (currentPage <= pageCount && !multiFetchAbort) {
+      if (statusEl) {
+        statusEl.textContent = `正在抓取第 ${currentPage}/${pageCount} 页...`;
+      }
+      
+      setStatus(`多页抓取：第 ${currentPage}/${pageCount} 页`);
+      
+      const result = await chrome.tabs.sendMessage(tab.id, {
+        type: "MULTI_FETCH_STEP",
+        useWebVPN: settings.useWebVPN
+      });
+      
+      if (!result?.ok) {
+        if (result?.stopped) {
+          break;
+        }
+        throw new Error(result?.error || "抓取失败");
+      }
+      
+      if (result.added > 0) {
+        totalAdded += result.added;
+      }
+      
+      // 重新加载papers
+      const data = await chrome.storage.local.get(["cnkiPapers"]);
+      papers = (data.cnkiPapers || []).map(normalizePaper);
+      renderList();
+      renderSummary();
+      
+      if (result.done) {
+        if (statusEl) statusEl.textContent = "已到最后一页";
+        break;
+      }
+      
+      currentPage++;
+      
+      // 间隔休息，防止触发验证
+      if (currentPage <= pageCount && !multiFetchAbort) {
+        const delay = 1500 + Math.random() * 1500; // 1.5-3秒间隔
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+    
+    setStatus(`多页抓取完成：共新增 ${totalAdded} 篇文献`);
+    if (statusEl) statusEl.textContent = `完成：共新增 ${totalAdded} 篇`;
+    
+    // 开始自动抓取PDF链接
+    if (totalAdded > 0) {
+      await new Promise(r => setTimeout(r, 500));
+      await fetchPdfLinks();
+    }
+    
+  } catch (error) {
+    console.error("Multi-fetch error:", error);
+    setStatus(`多页抓取失败: ${error.message}`);
+    if (statusEl) statusEl.textContent = `失败: ${error.message}`;
+  } finally {
+    multiFetchActive = false;
+    if (startBtn) startBtn.style.display = "inline-flex";
+    if (stopBtn) stopBtn.style.display = "none";
+  }
+}
+
+function stopMultiFetch() {
+  multiFetchAbort = true;
+  setStatus("正在停止多页抓取...");
+  
+  (async () => {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id) {
+        await chrome.tabs.sendMessage(tab.id, { type: "STOP_MULTI_FETCH" });
+      }
+    } catch {}
+  })();
+}
+
 // ===== 新增功能：导出/导入队列 =====
 async function exportQueue() {
   const data = {
@@ -1542,6 +1651,23 @@ async function bindEvents() {
       setStatus(`抓取失败: ${error.message}`);
     }
   });
+  
+  // ===== 多页批量抓取事件 =====
+  $("#btn-fetch-multi").addEventListener("click", () => {
+    const multiSettings = $("#multi-fetch-settings");
+    if (multiSettings) {
+      multiSettings.style.display = multiSettings.style.display === "none" ? "block" : "none";
+    }
+  });
+  
+  $("#btn-start-multi").addEventListener("click", () => {
+    const pageCountEl = $("#fetch-page-count");
+    const pageCount = Math.max(1, Math.min(50, parseInt(pageCountEl?.value || "5", 10)));
+    startMultiFetch(pageCount);
+  });
+  
+  $("#btn-stop-multi").addEventListener("click", stopMultiFetch);
+  
   $("#btn-batch-dl").addEventListener("click", downloadSelected);
 
   $("#btn-clear").addEventListener("click", async () => {
