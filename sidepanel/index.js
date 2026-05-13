@@ -1013,7 +1013,11 @@ async function triggerIframeDownload(url, baseUrl) {
   if (!tab?.id) throw new Error("无法创建下载标签页");
 
   try {
-    await waitForTabComplete(tab.id, 20000);
+    await waitForTabComplete(tab.id, 25000);
+    
+    // 添加随机延迟，模拟人类行为
+    await new Promise((resolve) => window.setTimeout(resolve, 500 + Math.random() * 1000));
+    
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       world: "MAIN",
@@ -1030,9 +1034,10 @@ async function triggerIframeDownload(url, baseUrl) {
       args: [url],
     });
   } finally {
+    // 增加等待时间，确保下载任务创建完成
     window.setTimeout(() => {
       chrome.tabs.remove(tab.id).catch(() => {});
-    }, 3000);
+    }, 5000 + Math.random() * 2000);
   }
 }
 
@@ -1041,9 +1046,12 @@ async function triggerDownloadFromDetailPage(detailUrl) {
 
   try {
     if (!tab?.id) throw new Error("无法创建详情页标签");
-    await waitForTabComplete(tab.id, 20000);
+    await waitForTabComplete(tab.id, 25000);
+    
+    // 模拟人类阅读页面的自然延迟
+    await new Promise((resolve) => window.setTimeout(resolve, 1000 + Math.random() * 1500));
 
-    const watchDownload = waitForMatchingDownload("", 12000, 5000);
+    const watchDownload = waitForMatchingDownload("", 15000, 6000);
     const [result] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       world: "MAIN",
@@ -1081,9 +1089,10 @@ async function triggerDownloadFromDetailPage(detailUrl) {
     return { ...(result?.result || {}), downloadItem };
   } finally {
     if (tab?.id) {
+      // 增加等待时间
       window.setTimeout(() => {
         chrome.tabs.remove(tab.id).catch(() => {});
-      }, 2500);
+      }, 4000 + Math.random() * 2000);
     }
   }
 }
@@ -1171,7 +1180,7 @@ async function downloadPaper(id, index = null, total = null) {
   );
 
   try {
-    const maxAttempts = 3;
+    const maxAttempts = 2; // 减少重试次数，避免过多请求
     let lastMessage = "";
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -1181,15 +1190,18 @@ async function downloadPaper(id, index = null, total = null) {
           : `正在下载（第 ${attempt}/${maxAttempts} 次尝试）：${paper.title}`
       );
 
-      const snapshot = await refreshPaperDetail(paper);
-      await savePapers();
-      renderList();
+      // 只有第一次尝试且paper数据不完整时才抓取详情页
+      if (attempt === 1 && !paper.pdfLink) {
+        const snapshot = await refreshPaperDetail(paper);
+        await savePapers();
+        renderList();
 
-      const blockingMessage = getSnapshotBlockingMessage(snapshot, paper);
-      if (blockingMessage) {
-        setDownloadState(id, "error", blockingMessage);
-        addLog("error", `下载被阻断: ${paper.title}`, `${blockingMessage}\n详情页: ${paper.detailUrl}`);
-        return;
+        const blockingMessage = getSnapshotBlockingMessage(snapshot, paper);
+        if (blockingMessage) {
+          setDownloadState(id, "error", blockingMessage);
+          addLog("error", `下载被阻断: ${paper.title}`, `${blockingMessage}\n详情页: ${paper.detailUrl}`);
+          return;
+        }
       }
 
       try {
@@ -1265,16 +1277,44 @@ async function downloadSelected() {
   }
 
   setStatus(`开始批量下载 ${ids.length} 篇`);
+  
+  // 防验证机制：智能下载策略
+  let consecutiveSuccess = 0;
+  
   for (let index = 0; index < ids.length; index += 1) {
     const id = ids[index];
     const paper = papers.find((item) => item.id === id);
     if (!paper || !isPaperDownloadable(paper)) continue;
     if (downloadState[id]?.status === "success") continue;
+    
     await downloadPaper(id, index, ids.length);
-    await new Promise((resolve) => window.setTimeout(resolve, 1800 + Math.random() * 1600));
+    
+    // 检查下载结果
+    const status = downloadState[id]?.status;
+    if (status === "success") {
+      consecutiveSuccess++;
+      
+      // 每下载8-10篇后主动休息45-90秒，防止触发验证
+      if (consecutiveSuccess > 0 && consecutiveSuccess % 8 === 0) {
+        const restTime = 45 + Math.random() * 45; // 45-90秒
+        setStatus(`已连续下载 ${consecutiveSuccess} 篇，正在休息 ${Math.round(restTime)} 秒...`);
+        await new Promise((resolve) => window.setTimeout(resolve, restTime * 1000));
+        setStatus(`休息结束，继续下载...`);
+      } else {
+        // 基础间隔8-12秒，带随机抖动
+        const interval = 8000 + Math.random() * 4000;
+        await new Promise((resolve) => window.setTimeout(resolve, interval));
+      }
+    } else {
+      // 失败时增加间隔，给更长的冷却时间
+      consecutiveSuccess = 0;
+      const errorInterval = 15000 + Math.random() * 10000; // 15-25秒
+      setStatus(`下载失败或被拦截，休息 ${Math.round(errorInterval / 1000)} 秒后重试...`);
+      await new Promise((resolve) => window.setTimeout(resolve, errorInterval));
+    }
   }
 
-  setStatus(`批量下载流程已触发，共 ${ids.length} 篇`);
+  setStatus(`批量下载流程已完成，共 ${ids.length} 篇`);
 }
 
 async function fetchLevel(url) {
