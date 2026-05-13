@@ -1,5 +1,9 @@
 let papers = [];
-let settings = { useWebVPN: false, fetchLevels: true };
+let settings = { 
+  useWebVPN: false, 
+  fetchLevels: true,
+  filenameTemplate: "{author} - {title}" 
+};
 let sortField = "";
 let sortDir = "desc";
 let searchQuery = "";
@@ -30,7 +34,7 @@ function normalizePaper(raw) {
     /\.(html?|mhtml?)(\?|$)/i.test(storedLink) ||
     /CAJ/i.test(storedLabel);
 
-  return {
+  const paper = {
     id: raw.id,
     title: raw.title || "未命名文献",
     detailUrl: raw.detailUrl || "",
@@ -46,7 +50,19 @@ function normalizePaper(raw) {
     keywords: raw.keywords || "",
     abstract: raw.abstract || "",
     level: normalizeLevelValue(raw.level) || "Wait",
+    downloadStatus: raw.downloadStatus || "", // 新增：持久化下载状态
+    downloadError: raw.downloadError || "",   // 新增：持久化下载错误信息
   };
+  
+  // 从持久化数据恢复 downloadState
+  if (paper.downloadStatus) {
+    downloadState[paper.id] = {
+      status: paper.downloadStatus,
+      error: paper.downloadError
+    };
+  }
+  
+  return paper;
 }
 
 const LEVEL_RULES = [
@@ -344,10 +360,12 @@ async function loadSettings() {
     "fetchLevels",
     "cnkiPapers",
     "cnkiSort",
+    "filenameTemplate",
   ]);
 
   settings.useWebVPN = data.useWebVPN ?? false;
   settings.fetchLevels = data.fetchLevels ?? true;
+  settings.filenameTemplate = data.filenameTemplate ?? "{author} - {title}";
   papers = Array.isArray(data.cnkiPapers) ? data.cnkiPapers.map(normalizePaper) : [];
 
   if (data.cnkiSort) {
@@ -720,6 +738,15 @@ function renderList() {
 
 function setDownloadState(id, status, error = "") {
   downloadState[id] = { status, error };
+  
+  // 持久化下载状态到 paper 对象
+  const paper = papers.find(p => p.id === id);
+  if (paper) {
+    paper.downloadStatus = status;
+    paper.downloadError = error;
+    savePapers(); // 异步保存，不需要等待
+  }
+  
   renderList();
 }
 
@@ -1324,6 +1351,121 @@ function copyPaperInfo(id, button) {
   });
 }
 
+// ===== 新增功能：导出/导入队列 =====
+async function exportQueue() {
+  const data = {
+    version: "1.0",
+    exportTime: new Date().toISOString(),
+    papers: papers,
+    settings: settings
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cnki-queue-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus("队列已导出");
+}
+
+async function importQueue(file) {
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (data.papers && Array.isArray(data.papers)) {
+      papers = data.papers.map(normalizePaper);
+      if (data.settings) {
+        settings = { ...settings, ...data.settings };
+      }
+      await savePapers();
+      await chrome.storage.local.set({ 
+        useWebVPN: settings.useWebVPN, 
+        fetchLevels: settings.fetchLevels,
+        filenameTemplate: settings.filenameTemplate 
+      });
+      $("#toggle-webvpn").checked = settings.useWebVPN;
+      $("#toggle-levels").checked = settings.fetchLevels;
+      renderList();
+      setStatus(`已导入 ${papers.length} 篇文献`);
+    }
+  } catch (e) {
+    addLog("error", "导入失败", e.message);
+    setStatus("导入失败，请检查文件格式");
+  }
+}
+
+// ===== 新增功能：文献引用格式导出 =====
+function generateCitation(paper, format = "gb7714") {
+  const author = paper.author || "佚名";
+  const title = paper.title || "无题";
+  const source = paper.source || "未注明来源";
+  const date = paper.date || "";
+  
+  if (format === "gb7714") {
+    // GB/T 7714 格式
+    return `${author}. ${title}[J]. ${source}, ${date}.`;
+  } else if (format === "apa") {
+    // APA 格式
+    return `${author}. (${date}). ${title}. ${source}.`;
+  } else if (format === "mla") {
+    // MLA 格式
+    return `${author}. "${title}." ${source}, ${date}.`;
+  }
+  return `${author}. ${title}. ${source}, ${date}.`;
+}
+
+async function exportCitations(format = "gb7714") {
+  const idsToExport = selectedIds.size > 0 ? [...selectedIds] : papers.map(p => p.id);
+  const citations = idsToExport
+    .map(id => papers.find(p => p.id === id))
+    .filter(Boolean)
+    .map(paper => generateCitation(paper, format));
+  
+  if (citations.length === 0) {
+    setStatus("没有可导出的文献");
+    return;
+  }
+  
+  const text = citations.join("\n\n");
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cnki-citations-${format}-${new Date().toISOString().slice(0, 10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus(`已导出 ${citations.length} 条参考文献`);
+}
+
+// ===== 新增功能：自定义文件名模板 =====
+function generateFilename(paper) {
+  const template = settings.filenameTemplate || "{author} - {title}";
+  const author = (paper.author || "佚名").replace(/[\\/:*?"<>|]/g, "_");
+  const title = (paper.title || "无题").replace(/[\\/:*?"<>|]/g, "_");
+  const source = (paper.source || "unknown").replace(/[\\/:*?"<>|]/g, "_");
+  const date = (paper.date || "unknown").replace(/[\\/:*?"<>|]/g, "_");
+  
+  return template
+    .replace(/\{author\}/g, author)
+    .replace(/\{title\}/g, title)
+    .replace(/\{source\}/g, source)
+    .replace(/\{date\}/g, date)
+    .slice(0, 150) + ".pdf";
+}
+
+// 更新 createSafeFilename 以使用自定义模板
+const originalCreateSafeFilename = createSafeFilename;
+function createSafeFilename(title, maxLength = 120) {
+  // 找到对应的 paper 对象
+  const paper = papers.find(p => p.title === title);
+  if (paper) {
+    return generateFilename(paper);
+  }
+  // 回退到原逻辑
+  return originalCreateSafeFilename(title, maxLength);
+}
+
 function setHelpDialogVisible(visible) {
   const dialog = $("#help-dialog");
   const button = $("#btn-help");
@@ -1381,6 +1523,31 @@ async function bindEvents() {
     await chrome.storage.local.set({ fetchLevels: settings.fetchLevels });
     renderList();
     if (settings.fetchLevels) loadAllLevels();
+  });
+  
+  // ===== 新增功能事件绑定 =====
+  $("#btn-export-queue").addEventListener("click", exportQueue);
+  
+  $("#btn-import-queue").addEventListener("click", () => {
+    $("#file-import-queue").click();
+  });
+  
+  $("#file-import-queue").addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importQueue(file);
+      event.target.value = "";
+    }
+  });
+  
+  $("#btn-export-gb7714").addEventListener("click", () => exportCitations("gb7714"));
+  $("#btn-export-apa").addEventListener("click", () => exportCitations("apa"));
+  $("#btn-export-mla").addEventListener("click", () => exportCitations("mla"));
+  
+  $("#filename-template").addEventListener("change", async (event) => {
+    settings.filenameTemplate = event.target.value || "{author} - {title}";
+    await chrome.storage.local.set({ filenameTemplate: settings.filenameTemplate });
+    setStatus("文件名模板已保存");
   });
 
   $("#search-input").addEventListener("input", (event) => {
@@ -1517,6 +1684,7 @@ async function init() {
   await loadSettings();
   $("#toggle-webvpn").checked = settings.useWebVPN;
   $("#toggle-levels").checked = settings.fetchLevels;
+  $("#filename-template").value = settings.filenameTemplate;
   await bindEvents();
 
   papers.filter((paper) => isPaperDownloadable(paper)).forEach((paper) => selectedIds.add(paper.id));
